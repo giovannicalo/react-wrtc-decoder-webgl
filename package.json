@@ -1,0 +1,37 @@
+{
+	"author": {
+		"email": "giovanni.calo@live.it",
+		"name": "Giovanni Calò",
+		"url": "https://github.com/giovannicalo"
+	},
+	"bugs": {
+		"url": "https://github.com/giovannicalo/react-wrtc-decoder-webgl/issues"
+	},
+	"description": "React WebRTC WebGL Metadata Decoder",
+	"devDependencies": {
+		"@babel/cli": "^7.27.1",
+		"@babel/core": "^7.27.1",
+		"@babel/preset-env": "^7.27.1",
+		"eslint": "^9.26.0",
+		"eslint-config-giovanni": "giovannicalo/eslint-config"
+	},
+	"engines": {
+		"node": ">=23.11.0"
+	},
+	"homepage": "https://github.com/giovannicalo/react-wrtc-decoder-webgl",
+	"keywords": ["composite", "decoder", "react", "stream", "video", "webgl", "webrtc", "websocket", "wrtc", "ws"],
+	"license": "MIT",
+	"main": "build/index.js",
+	"name": "react-wrtc-decoder-webgl",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/giovannicalo/react-wrtc-decoder-webgl.git"
+	},
+	"scripts": {
+		"build": "babel --out-dir build source",
+		"lint": "eslint -f pretty .",
+		"prepare": "npm run build",
+		"prepublishOnly": "npm run lint"
+	},
+	"version": "0.0.0"
+}
