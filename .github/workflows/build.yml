@@ -1,0 +1,28 @@
+jobs:
+  build:
+    name: Build
+    runs-on: ${{matrix.os}}
+    steps:
+    - name: Install Node
+      uses: actions/setup-node@v4.4.0
+      with:
+        node-version: 23.11.0
+    - name: Configure Git
+      run: git config --global core.autocrlf input
+    - name: Checkout code
+      uses: actions/checkout@v4.2.2
+    - name: Install dependencies
+      run: npm install --no-fund --no-save
+    - name: Lint
+      run: npm run lint
+    strategy:
+      matrix:
+        os:
+        - macos-15
+        - ubuntu-24.04
+        - windows-2025
+name: Build
+on:
+- pull_request
+- push
+- workflow_dispatch
