@@ -2,17 +2,13 @@ import { fragmentShaderSource, vertexShaderSource } from "./shaders";
 
 class Decoder {
 
-	#canvas = document.createElement("canvas");
-
-	#context = this.#canvas.getContext("2d");
-
 	#decodedData = null;
 
 	#encodedData = null;
 
-	#glCanvas = document.createElement("canvas");
+	#canvas = new OffscreenCanvas(1, 1);
 
-	#glContext = this.#glCanvas.getContext("webgl2");
+	#context = this.#canvas.getContext("webgl2");
 
 	#height = 0;
 
@@ -32,49 +28,46 @@ class Decoder {
 		const fragmentShader = this.#createShader("FRAGMENT_SHADER", fragmentShaderSource);
 		const vertexShader = this.#createShader("VERTEX_SHADER", vertexShaderSource);
 		this.#parser = parser;
+		this.#canvas.width = parser.pixelSize;
 		this.#encodedData = new Uint8Array(parser.byteSize);
-		this.#glCanvas.height = 1;
-		this.#glCanvas.width = this.#parser.pixelSize;
-		this.#program = this.#glContext.createProgram();
-		this.#glContext.attachShader(this.#program, fragmentShader);
-		this.#glContext.attachShader(this.#program, vertexShader);
-		this.#glContext.linkProgram(this.#program);
-		this.#glContext.detachShader(this.#program, fragmentShader);
-		this.#glContext.detachShader(this.#program, vertexShader);
-		this.#glContext.deleteShader(fragmentShader);
-		this.#glContext.deleteShader(vertexShader);
-		if (!this.#glContext.getProgramParameter(this.#program, this.#glContext.LINK_STATUS)) {
-			throw new Error(`Failed to compile shader:\n${this.#glContext.getProgramInfoLog(this.#program)}`);
+		this.#program = this.#context.createProgram();
+		this.#context.attachShader(this.#program, fragmentShader);
+		this.#context.attachShader(this.#program, vertexShader);
+		this.#context.linkProgram(this.#program);
+		this.#context.detachShader(this.#program, fragmentShader);
+		this.#context.detachShader(this.#program, vertexShader);
+		this.#context.deleteShader(fragmentShader);
+		this.#context.deleteShader(vertexShader);
+		if (!this.#context.getProgramParameter(this.#program, this.#context.LINK_STATUS)) {
+			throw new Error(`Failed to compile shader:\n${this.#context.getProgramInfoLog(this.#program)}`);
 		}
-		this.#glContext.useProgram(this.#program);
-		this.#glContext.bindBuffer(this.#glContext.ARRAY_BUFFER, this.#glContext.createBuffer());
-		this.#glContext.bufferData(
-			this.#glContext.ARRAY_BUFFER,
+		this.#context.useProgram(this.#program);
+		this.#context.bindBuffer(this.#context.ARRAY_BUFFER, this.#context.createBuffer());
+		this.#context.bufferData(
+			this.#context.ARRAY_BUFFER,
 			new Float32Array([-1, 1, 1, 1, -1, -1, 1, -1]),
-			this.#glContext.STATIC_DRAW
+			this.#context.STATIC_DRAW
 		);
-		const vertexLocation = this.#glContext.getAttribLocation(this.#program, "vertex");
-		this.#glContext.vertexAttribPointer(vertexLocation, 2, this.#glContext.FLOAT, false, 0, 0);
-		this.#glContext.enableVertexAttribArray(vertexLocation);
-		this.#glContext.viewport(0, 0, this.#parser.pixelSize, 1);
-		this.#glContext.clearColor(0, 0, 0, 0);
-		this.#glContext.clear(this.#glContext.COLOR_BUFFER_BIT);
+		const vertexLocation = this.#context.getAttribLocation(this.#program, "vertex");
+		this.#context.vertexAttribPointer(vertexLocation, 2, this.#context.FLOAT, false, 0, 0);
+		this.#context.enableVertexAttribArray(vertexLocation);
+		this.#context.viewport(0, 0, this.#parser.pixelSize, 1);
+		this.#context.clearColor(0, 0, 0, 0);
+		this.#context.clear(this.#context.COLOR_BUFFER_BIT);
 	}
 
 	close = () => {
 		this.#stream.cancelFrameCallback(this.#loop);
-		this.#canvas?.remove();
-		this.#glCanvas?.remove();
-		this.#glContext?.deleteProgram(this.#program);
-		this.#glContext?.deleteTexture(this.#texture);
+		this.#context?.deleteProgram(this.#program);
+		this.#context?.deleteTexture(this.#texture);
 	};
 
 	#createShader = (type, source) => {
-		const shader = this.#glContext.createShader(this.#glContext[type]);
-		this.#glContext.shaderSource(shader, source);
-		this.#glContext.compileShader(shader);
-		if (!this.#glContext.getShaderParameter(shader, this.#glContext.COMPILE_STATUS)) {
-			throw new Error(`Failed to compile shader:\n${this.#glContext.getShaderInfoLog(shader)}`);
+		const shader = this.#context.createShader(this.#context[type]);
+		this.#context.shaderSource(shader, source);
+		this.#context.compileShader(shader);
+		if (!this.#context.getShaderParameter(shader, this.#context.COMPILE_STATUS)) {
+			throw new Error(`Failed to compile shader:\n${this.#context.getShaderInfoLog(shader)}`);
 		}
 		return shader;
 	};
@@ -94,33 +87,29 @@ class Decoder {
 		if (this.#height !== height || this.#width !== width) {
 			this.#height = height;
 			this.#width = width;
-			this.#canvas.height = height;
-			this.#canvas.width = width;
-			this.#context.clearRect(0, 0, width, height);
-			this.#glContext.deleteTexture(this.#texture);
-			this.#texture = this.#glContext.createTexture();
-			this.#glContext.bindTexture(this.#glContext.TEXTURE_2D, this.#texture);
-			this.#glContext.texStorage2D(this.#glContext.TEXTURE_2D, 1, this.#glContext.RGBA8, width, height);
+			this.#context.deleteTexture(this.#texture);
+			this.#texture = this.#context.createTexture();
+			this.#context.bindTexture(this.#context.TEXTURE_2D, this.#texture);
+			this.#context.texStorage2D(this.#context.TEXTURE_2D, 1, this.#context.RGBA8, width, height);
 		}
-		this.#context.drawImage(this.#stream.video, 0, 0, width, height);
 		if (this.#texture) {
-			this.#glContext.texSubImage2D(
-				this.#glContext.TEXTURE_2D,
+			this.#context.texSubImage2D(
+				this.#context.TEXTURE_2D,
 				0,
 				0,
 				0,
-				this.#glContext.RGBA,
-				this.#glContext.UNSIGNED_BYTE,
-				this.#canvas
+				this.#context.RGBA,
+				this.#context.UNSIGNED_BYTE,
+				this.#stream.video
 			);
-			this.#glContext.drawArrays(this.#glContext.TRIANGLE_STRIP, 0, 4);
-			this.#glContext.readPixels(
+			this.#context.drawArrays(this.#context.TRIANGLE_STRIP, 0, 4);
+			this.#context.readPixels(
 				0,
 				0,
 				this.#parser.pixelSize,
 				1,
-				this.#glContext.RGBA,
-				this.#glContext.UNSIGNED_BYTE,
+				this.#context.RGBA,
+				this.#context.UNSIGNED_BYTE,
 				this.#encodedData
 			);
 			this.#decodedData = await this.#parser.parse(this.#encodedData);
