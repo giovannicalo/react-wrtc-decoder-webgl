@@ -28,7 +28,7 @@
 		"url": "https://github.com/giovannicalo/react-wrtc-decoder-webgl.git"
 	},
 	"scripts": {
-		"build": "babel --out-dir build source",
+		"build": "babel --out-dir build source && node scripts/build",
 		"lint": "eslint -f pretty .",
 		"prepare": "npm run build",
 		"prepublishOnly": "npm run lint"

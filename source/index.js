@@ -1,6 +1,6 @@
 import { fragmentShaderSource, vertexShaderSource } from "./shaders";
 
-class WebglDecoder {
+class Decoder {
 
 	#canvas = document.createElement("canvas");
 
@@ -131,4 +131,4 @@ class WebglDecoder {
 
 }
 
-export default WebglDecoder;
+export default Decoder;
